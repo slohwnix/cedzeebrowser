@@ -123,10 +123,10 @@ class BrowserWindow(QMainWindow):
         self.adress_input.setCursorPosition(0)
 
     def go_home(self):
-        self.current_browser().setUrl(home_url)
+        self.current_browser().setUrl(QUrl.fromLocalFile(home_url))
 
     def open_new_tab(self):
-        self.add_new_tab(home_url, "Nouvel Onglet")
+        self.add_new_tab(QUrl.fromLocalFile(home_url), "Nouvel Onglet")
 
     def show_tab_context_menu(self, position):
         menu = QMenu()

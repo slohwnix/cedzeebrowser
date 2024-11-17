@@ -34,8 +34,6 @@ class BrowserWindow(QMainWindow):
         self.menu = QToolBar("Menu de navigation")
         self.addToolBar(self.menu)
         self.add_navigation_buttons()
-
-        # Ajouter un onglet pour la page d'accueil au démarrage de manière uniforme
         self.add_homepage_tab()
 
         self.tabs.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
@@ -72,24 +70,21 @@ class BrowserWindow(QMainWindow):
         self.menu.addAction(new_tab_btn)
 
     def add_homepage_tab(self):
-        """Ajoute un onglet avec la page d'accueil directement après le démarrage, comme un nouvel onglet"""
         try:
             browser = QWebEngineView()
             browser.setUrl(QUrl.fromLocalFile(home_url))
-            
-            # Connexion au signal loadFinished pour s'assurer que la page est chargée correctement
             browser.loadFinished.connect(self.on_homepage_loaded)
             browser.urlChanged.connect(self.update_urlbar)
             browser.page().javaScriptConsoleMessage = self.handle_js_error  
+            browser.setUrl(QUrl.fromLocalFile(home_url))
 
             tab = QWidget()
             layout = QVBoxLayout()
             layout.addWidget(browser)
             tab.setLayout(layout)
-
-            # Ajouter l'onglet à la tab widget (comme un nouvel onglet)
             self.tabs.addTab(tab, "Page d'accueil")
             self.tabs.setCurrentWidget(tab)
+            browser.reload()
 
         except Exception as e:
             print(f"Erreur lors de l'ajout de la page d'accueil : {e}", file=sys.stderr)
@@ -101,7 +96,6 @@ class BrowserWindow(QMainWindow):
             print("Page d'accueil chargée avec succès.")
 
     def current_browser(self):
-        """Récupérer le navigateur Web dans l'onglet actuel."""
         try:
             current_tab = self.tabs.currentWidget()
             return current_tab.layout().itemAt(0).widget() if current_tab else None
@@ -110,12 +104,10 @@ class BrowserWindow(QMainWindow):
             return None
 
     def close_tab(self, index):
-        """Fermer un onglet."""
         if self.tabs.count() > 1:
             self.tabs.removeTab(index)
 
     def navigate_to_url(self):
-        """Naviguer vers l'URL entrée dans la barre d'adresse."""
         try:
             url = QUrl(self.adress_input.text())
             if url.scheme() == "":
@@ -126,7 +118,6 @@ class BrowserWindow(QMainWindow):
             print(f"Erreur lors de la navigation vers une URL : {e}", file=sys.stderr)
 
     def update_urlbar(self, url):
-        """Mettre à jour la barre d'adresse."""
         try:
             self.adress_input.setText(url.toString())
             self.adress_input.setCursorPosition(0)
@@ -134,16 +125,13 @@ class BrowserWindow(QMainWindow):
             print(f"Erreur lors de la mise à jour de la barre d'adresse : {e}", file=sys.stderr)
 
     def go_home(self):
-        """Revenir à la page d'accueil."""
         if self.current_browser():
             self.current_browser().setUrl(QUrl.fromLocalFile(home_url))
 
     def open_new_tab(self):
-        """Ouvrir un nouvel onglet."""
         self.add_homepage_tab()
 
     def show_tab_context_menu(self, position):
-        """Afficher le menu contextuel pour gérer les onglets."""
         try:
             menu = QMenu()
             new_tab_action = menu.addAction("Ouvrir un nouvel onglet")
@@ -158,10 +146,8 @@ class BrowserWindow(QMainWindow):
             print(f"Erreur lors de l'affichage du menu contextuel : {e}", file=sys.stderr)
 
     def handle_js_error(self, message, line, sourceID, errorMsg):
-        """Gérer les erreurs JavaScript."""
         print(f"Erreur JavaScript : {message} à la ligne {line} dans {sourceID}: {errorMsg}", file=sys.stderr)
 
-# Initialisation de l'application et de la fenêtre
 window = BrowserWindow()
 window.show()
 

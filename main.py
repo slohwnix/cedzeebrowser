@@ -44,6 +44,8 @@ class BrowserWindow(QMainWindow):
         self.new_tab_shortcut.triggered.connect(self.open_new_tab)
         self.addAction(self.new_tab_shortcut)
 
+        self.page_loaded = False 
+
     def add_navigation_buttons(self):
         back_btn = QAction("←", self)
         back_btn.triggered.connect(lambda: self.current_browser().back() if self.current_browser() else None)
@@ -71,20 +73,19 @@ class BrowserWindow(QMainWindow):
 
     def add_homepage_tab(self):
         try:
-            browser = QWebEngineView()
-            browser.setUrl(QUrl.fromLocalFile(home_url))
-            browser.loadFinished.connect(self.on_homepage_loaded)
-            browser.urlChanged.connect(self.update_urlbar)
-            browser.page().javaScriptConsoleMessage = self.handle_js_error  
-            browser.setUrl(QUrl.fromLocalFile(home_url))
+            self.browser = QWebEngineView()
+            self.browser.setUrl(QUrl.fromLocalFile(home_url))
+            self.browser.loadFinished.connect(self.on_homepage_loaded)
+            self.browser.urlChanged.connect(self.update_urlbar)
+            self.browser.page().javaScriptConsoleMessage = self.handle_js_error  
 
             tab = QWidget()
             layout = QVBoxLayout()
-            layout.addWidget(browser)
+            layout.addWidget(self.browser)
             tab.setLayout(layout)
             self.tabs.addTab(tab, "Page d'accueil")
             self.tabs.setCurrentWidget(tab)
-            browser.reload()
+            self.go_home()
 
         except Exception as e:
             print(f"Erreur lors de l'ajout de la page d'accueil : {e}", file=sys.stderr)
@@ -94,6 +95,9 @@ class BrowserWindow(QMainWindow):
             print("Erreur lors du chargement de la page d'accueil.", file=sys.stderr)
         else:
             print("Page d'accueil chargée avec succès.")
+            if not self.page_loaded:
+                self.browser.reload()
+                self.page_loaded = True 
 
     def current_browser(self):
         try:
@@ -156,4 +160,3 @@ try:
 except Exception as e:
     print(f"Erreur critique lors de l'exécution de l'application : {e}", file=sys.stderr)
     exit(1)
-

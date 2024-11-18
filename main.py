@@ -1,23 +1,15 @@
 import sys
 import os
-
-try:
-    from PyQt6.QtWidgets import QApplication, QMainWindow, QToolBar, QLineEdit, QTabWidget, QWidget, QMenu, QVBoxLayout
-    from PyQt6.QtGui import QAction
-    from PyQt6.QtCore import QUrl, Qt
-    from PyQt6.QtWebEngineWidgets import QWebEngineView
-except (ImportError, ImportWarning) as err:
-    print(f"Erreur lors de l'importation des modules.\nDétails:\n{err}", file=sys.stderr)
-    exit(1)
+from PyQt6.QtWidgets import QApplication, QMainWindow, QToolBar, QLineEdit, QTabWidget, QWidget, QMenu, QVBoxLayout
+from PyQt6.QtGui import QAction
+from PyQt6.QtCore import QUrl, Qt
+from PyQt6.QtWebEngineWidgets import QWebEngineView
 
 application = QApplication.instance()
 if not application:
     application = QApplication(sys.argv)
 
 home_url = os.path.abspath("./web/index.html")
-if not os.path.exists(home_url):
-    print("Erreur : La page d'accueil spécifiée est introuvable.", file=sys.stderr)
-    exit(1)
 
 class BrowserWindow(QMainWindow):
     def __init__(self):
@@ -72,61 +64,43 @@ class BrowserWindow(QMainWindow):
         self.menu.addAction(new_tab_btn)
 
     def add_homepage_tab(self):
-        try:
-            self.browser = QWebEngineView()
-            self.browser.setUrl(QUrl.fromLocalFile(home_url))
-            self.browser.loadFinished.connect(self.on_homepage_loaded)
-            self.browser.urlChanged.connect(self.update_urlbar)
-            self.browser.page().javaScriptConsoleMessage = self.handle_js_error  
+        self.browser = QWebEngineView()
+        self.browser.setUrl(QUrl.fromLocalFile(home_url))
+        self.browser.loadFinished.connect(self.on_homepage_loaded)
+        self.browser.urlChanged.connect(self.update_urlbar)
+        self.browser.page().javaScriptConsoleMessage = self.handle_js_error  
 
-            tab = QWidget()
-            layout = QVBoxLayout()
-            layout.addWidget(self.browser)
-            tab.setLayout(layout)
-            self.tabs.addTab(tab, "Page d'accueil")
-            self.tabs.setCurrentWidget(tab)
-            self.go_home()
-
-        except Exception as e:
-            print(f"Erreur lors de l'ajout de la page d'accueil : {e}", file=sys.stderr)
+        tab = QWidget()
+        layout = QVBoxLayout()
+        layout.addWidget(self.browser)
+        tab.setLayout(layout)
+        self.tabs.addTab(tab, "Page d'accueil")
+        self.tabs.setCurrentWidget(tab)
+        self.go_home()
 
     def on_homepage_loaded(self, ok):
-        if not ok:
-            print("Erreur lors du chargement de la page d'accueil.", file=sys.stderr)
-        else:
-            print("Page d'accueil chargée avec succès.")
-            if not self.page_loaded:
-                self.browser.reload()
-                self.page_loaded = True 
+        if ok and not self.page_loaded:
+            self.browser.reload()
+            self.page_loaded = True 
 
     def current_browser(self):
-        try:
-            current_tab = self.tabs.currentWidget()
-            return current_tab.layout().itemAt(0).widget() if current_tab else None
-        except Exception as e:
-            print(f"Erreur lors de la récupération du navigateur actuel : {e}", file=sys.stderr)
-            return None
+        current_tab = self.tabs.currentWidget()
+        return current_tab.layout().itemAt(0).widget() if current_tab else None
 
     def close_tab(self, index):
         if self.tabs.count() > 1:
             self.tabs.removeTab(index)
 
     def navigate_to_url(self):
-        try:
-            url = QUrl(self.adress_input.text())
-            if url.scheme() == "":
-                url.setScheme("http")
-            if self.current_browser():
-                self.current_browser().setUrl(url)
-        except Exception as e:
-            print(f"Erreur lors de la navigation vers une URL : {e}", file=sys.stderr)
+        url = QUrl(self.adress_input.text())
+        if url.scheme() == "":
+            url.setScheme("http")
+        if self.current_browser():
+            self.current_browser().setUrl(url)
 
     def update_urlbar(self, url):
-        try:
-            self.adress_input.setText(url.toString())
-            self.adress_input.setCursorPosition(0)
-        except Exception as e:
-            print(f"Erreur lors de la mise à jour de la barre d'adresse : {e}", file=sys.stderr)
+        self.adress_input.setText(url.toString())
+        self.adress_input.setCursorPosition(0)
 
     def go_home(self):
         if self.current_browser():
@@ -136,18 +110,15 @@ class BrowserWindow(QMainWindow):
         self.add_homepage_tab()
 
     def show_tab_context_menu(self, position):
-        try:
-            menu = QMenu()
-            new_tab_action = menu.addAction("Ouvrir un nouvel onglet")
-            close_tab_action = menu.addAction("Fermer cet onglet")
+        menu = QMenu()
+        new_tab_action = menu.addAction("Ouvrir un nouvel onglet")
+        close_tab_action = menu.addAction("Fermer cet onglet")
 
-            action = menu.exec(self.tabs.mapToGlobal(position))
-            if action == new_tab_action:
-                self.open_new_tab()
-            elif action == close_tab_action:
-                self.close_tab(self.tabs.currentIndex())
-        except Exception as e:
-            print(f"Erreur lors de l'affichage du menu contextuel : {e}", file=sys.stderr)
+        action = menu.exec(self.tabs.mapToGlobal(position))
+        if action == new_tab_action:
+            self.open_new_tab()
+        elif action == close_tab_action:
+            self.close_tab(self.tabs.currentIndex())
 
     def handle_js_error(self, message, line, sourceID, errorMsg):
         print(f"Erreur JavaScript : {message} à la ligne {line} dans {sourceID}: {errorMsg}", file=sys.stderr)
@@ -155,8 +126,4 @@ class BrowserWindow(QMainWindow):
 window = BrowserWindow()
 window.show()
 
-try:
-    application.exec()
-except Exception as e:
-    print(f"Erreur critique lors de l'exécution de l'application : {e}", file=sys.stderr)
-    exit(1)
+application.exec()
